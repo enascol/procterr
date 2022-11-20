@@ -21,7 +21,7 @@ sky = Sky(texture="textures/dead_stars_night_sky")
 
 #window.fullscreen = True
 
-#scene.fog_density = 0.9
+scene.fog_density = 0.9
 #scene.fog_color = color.rgb(0, 0, 0)
 
 level = Level(player)
