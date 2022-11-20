@@ -1,6 +1,6 @@
 from ursina import *
 from voxel import Voxel
-from settings import TERRAIN_WIDTH
+from settings import TERRAIN_WIDTH, FREQUENCY, AMP, OCTAVE
 from perlin_noise import PerlinNoise
 from numpy import floor
 from ursina.shaders import lit_with_shadows_shader
@@ -16,9 +16,9 @@ class Level:
         self.terrain_finished = False
 
         # Procedural generation params
-        self.noise = PerlinNoise(octaves = 1, seed = random.randint(1, 50000))
-        self.freq = 30
-        self.amp = 30
+        self.noise = PerlinNoise(octaves = OCTAVE, seed = random.randint(1, 50000))
+        self.freq = FREQUENCY
+        self.amp = AMP
 
         # Terrain chunk settings
         # This terrain is small enough to be walked on
@@ -35,7 +35,9 @@ class Level:
         self.current_subset = 0
         self.subcubes = [Entity(model = "cube") for _ in range(self.sub_width)]
         self.subsets = [Entity(model = None) for _ in range(int((self.terrain_width ** 2) / self.sub_width))]
-    
+
+        self.place_smiling_orb()
+
     def set_basic_terrain(self):
         for i in range(self.terrain_width ** 2):
             cube = Entity(model = 'models/grass')
@@ -67,32 +69,43 @@ class Level:
             z = self.subcubes[i].z = floor((i + self.subcube_index) % self.terrain_width)
             y = self.subcubes[i].y = floor((self.noise([x / self.freq, z / self.freq])) * self.amp)
 
-            if y > 5:
-                c = color.rgb(50, 168, 135)
-            elif y < -10:
-                c = color.rgb(x * 10, y * 10, z * 10)
-            elif y < -8:
-                c = color.rgb(168, 72, 50)
-            elif y < -2:
-                c = color.rgb(100, 102, 100)
+            if y > 8:
+                r, g, b = 255, 255, 255
+            elif y > 4:
+                r, g, b = 58, 146, 194
+            elif y < -6:
+                r, g, b = 194, 74, 58
+            elif y < -3:
+                r, g, b = 50, 52, 54
             else:
-                c = color.rgb(64, 168, 50)
+                r, g, b = 97, 194, 58
+            
+            if (r, g, b) not in((255, 255, 255), (50, 52, 54)):
+                r, g, b = [random.randint(v-5, v+5) for v in [r, g, b]]
 
             self.subcubes[i].parent = self.subsets[self.current_subset]
-            self.subcubes[i].color = c
+            self.subcubes[i].color = color.rgb(r, g, b)
             self.subcubes[i].visible = False
-        
+
         self.subsets[self.current_subset].combine(auto_destroy=False)
-        self.subsets[self.current_subset].texture = "textures/centered_white_spiral"
+        #self.subsets[self.current_subset].texture = "textures/black_cube"
         self.subcube_index += self.sub_width
         self.current_subset += 1
     
     def finish_terrain(self):
         if not self.terrain_finished:
-            application.pause()
             self.terrain.combine()
             self.terrain_finished = True
-            self.player.x = int(self.terrain.x / 2)
-            self.player.y = 20
-            application.resume()
+            self.terrain.texture = "textures/black_cube"
+    
+    def n_map(self, n, min1, max1, min2, max2):
+        return ((n - min1) / (max1 - min1)) * (max2 - min2) + min2
+
+    def place_smiling_orb(self):
+        Entity(model="models/smiling_orb", 
+              texture="textures/smile",
+              x = 22,
+              z = 16,
+              y = 7.1
+        )
 
