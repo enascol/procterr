@@ -7,6 +7,7 @@ from player import Player
 from sun import Sun
 from numpy import abs
 from settings import TERRAIN_WIDTH
+from builder import BuilderTool
 
 app = Ursina()
 
@@ -19,13 +20,18 @@ previous_time = time.time()
 
 sky = Sky(texture="textures/dead_stars_night_sky")
 
-#window.fullscreen = True
+window.fullscreen = False
 
-scene.fog_density = 0.08
+scene.fog_density = 0.04
 scene.fog_color = color.rgb(0, 0, 0)
 
+b = BuilderTool()
 level = Level(player)
 level.generate_chunk()
+
+def input(key):
+    if key == "left mouse up":
+        b.place()
 
 def update():
     global previous_time
@@ -34,7 +40,10 @@ def update():
     
     if time.time() - previous_time > 0.1:
         level.generate_subset()
-        #previous_time = time.time()
+    
+    
+    #b.select(player)
+
 
 app.run()
 

@@ -68,23 +68,9 @@ class Level:
             x = self.subcubes[i].x = floor((i + self.subcube_index) / self.terrain_width)
             z = self.subcubes[i].z = floor((i + self.subcube_index) % self.terrain_width)
             y = self.subcubes[i].y = floor((self.noise([x / self.freq, z / self.freq])) * self.amp)
-
-            if y > 8:
-                r, g, b = 255, 255, 255
-            elif y > 4:
-                r, g, b = 58, 146, 194
-            elif y < -6:
-                r, g, b = 194, 74, 58
-            elif y < -3:
-                r, g, b = 50, 52, 54
-            else:
-                r, g, b = 97, 194, 58
             
-            if (r, g, b) not in((255, 255, 255), (50, 52, 54)):
-                r, g, b = [random.randint(v-5, v+5) for v in [r, g, b]]
-
             self.subcubes[i].parent = self.subsets[self.current_subset]
-            self.subcubes[i].color = color.rgb(r, g, b)
+            self.subcubes[i].color = self.set_block_color(y)
             self.subcubes[i].visible = False
 
         self.subsets[self.current_subset].combine(auto_destroy=False)
@@ -92,6 +78,37 @@ class Level:
         self.subcube_index += self.sub_width
         self.current_subset += 1
     
+    def set_block_color(self, y):
+            cloud = 255, 255, 255
+            ice = 58, 146, 194
+            rock = 50, 52, 54
+            lava = 194, 74, 58
+            grass = 97, 194, 58
+            dirt = 59, 39, 36
+            
+            if y > 8:
+                r, g, b = cloud
+            elif y > 6:
+                r, g, b = ice
+            elif y > 4:
+                r, g, b = dirt
+            elif y > 6:
+                r, g, b = ice
+            elif y < -6:
+                r, g, b = lava
+            elif y < -2:
+                r, g, b = rock
+            else:
+                r, g, b = grass
+            
+            if (r, g, b) not in (cloud, rock):
+                r, g, b = [random.randint(v-5, v+5) for v in (r, g, b)]
+            elif (r, g, b) == rock:
+                m = random.randint(-5, 5)
+                r, g, b = r + m, g + m, b + m
+            
+            return color.rgb(r, g, b)
+
     def finish_terrain(self):
         if not self.terrain_finished:
             self.terrain.combine()
@@ -102,10 +119,11 @@ class Level:
         return ((n - min1) / (max1 - min1)) * (max2 - min2) + min2
 
     def place_smiling_orb(self):
-        Entity(model="models/smiling_orb", 
-              texture="textures/smile",
-              x = 22,
-              z = 16,
-              y = 7.1
-        )
+        for x in range(100):
+            Entity(model="models/smiling_orb", 
+                  texture="textures/smile",
+                    x = random.randint(1, self.terrain_width),
+                    z = random.randint(1, self.terrain_width),
+                    y = 10
+                    )
 
