@@ -1,9 +1,10 @@
 from ursina import *
 from voxel import Voxel
-from settings import TERRAIN_WIDTH, FREQUENCY, AMP, OCTAVE
 from perlin_noise import PerlinNoise
 from numpy import floor
 from ursina.shaders import lit_with_shadows_shader
+
+import settings
 
 class Level:
 
@@ -11,14 +12,14 @@ class Level:
         self.player = player 
 
         # Terrain info
-        self.terrain_width = TERRAIN_WIDTH
+        self.terrain_width = settings.TERRAIN_WIDTH
         self.terrain = Entity(model = None, collider =None)
         self.terrain_finished = False
 
         # Procedural generation params
-        self.noise = PerlinNoise(octaves = OCTAVE, seed = random.randint(1, 50000))
-        self.freq = FREQUENCY
-        self.amp = AMP
+        self.noise = PerlinNoise(octaves = settings.OCTAVE, seed = random.randint(1, 50000))
+        self.freq = settings.FREQUENCY
+        self.amp = settings.AMP
 
         # Terrain chunk settings
         # This terrain is small enough to be walked on
@@ -35,6 +36,10 @@ class Level:
         self.current_subset = 0
         self.subcubes = [Entity(model = "cube") for _ in range(self.sub_width)]
         self.subsets = [Entity(model = None) for _ in range(int((self.terrain_width ** 2) / self.sub_width))]
+
+        self.sky = Entity(collider =None, texture =None, model =None)
+        self.movement_direction = 1
+        self.stars = []
 
         self.place_smiling_orb()
 
@@ -58,7 +63,7 @@ class Level:
             self.chunks[i].y = floor((self.noise([x / self.freq, z / self.freq])) * self.amp)
 
             self.chunks[i].visible = False
-
+    
     def generate_subset(self):
         if self.current_subset >= len(self.subsets):
             self.finish_terrain()
@@ -75,55 +80,65 @@ class Level:
 
         self.subsets[self.current_subset].combine(auto_destroy=False)
         #self.subsets[self.current_subset].texture = "textures/black_cube"
+        #self.subsets[self.current_subset].shader = lit_with_shadows_shader
         self.subcube_index += self.sub_width
         self.current_subset += 1
     
     def set_block_color(self, y):
-            cloud = 255, 255, 255
-            ice = 58, 146, 194
-            rock = 50, 52, 54
-            lava = 194, 74, 58
-            grass = 97, 194, 58
-            dirt = 59, 39, 36
+        cloud = 255, 255, 255
+        ice = 58, 146, 194
+        rock = 50, 52, 54
+        lava = 194, 74, 58
+        grass = 66, 110, 48
+        dirt = 59, 39, 36
             
-            if y > 8:
-                r, g, b = cloud
-            elif y > 6:
-                r, g, b = ice
-            elif y > 4:
-                r, g, b = dirt
-            elif y > 6:
-                r, g, b = ice
-            elif y < -6:
-                r, g, b = lava
-            elif y < -2:
-                r, g, b = rock
-            else:
-                r, g, b = grass
-            
-            if (r, g, b) not in (cloud, rock):
-                r, g, b = [random.randint(v-5, v+5) for v in (r, g, b)]
-            elif (r, g, b) == rock:
-                m = random.randint(-5, 5)
-                r, g, b = r + m, g + m, b + m
-            
-            return color.rgb(r, g, b)
+        if y > 2: r, g, b = dirt
+        elif y >= 0: r, g, b = grass
+        elif y > -5: r, g, b = rock
+        else: r, g, b = lava
+
+        if (r, g, b) not in (cloud, rock):
+            r, g, b = [random.randint(v-5, v+5) for v in (r, g, b)]
+        elif (r, g, b) == rock:
+            m = random.randint(-5, 5)
+            r, g, b = r + m, g + m, b + m
+
+        return color.rgb(r, g, b)
 
     def finish_terrain(self):
         if not self.terrain_finished:
+            self.player.disable()
             self.terrain.combine()
             self.terrain_finished = True
             self.terrain.texture = "textures/black_cube"
+            self.sky.combine()
+            self.player.enable()
     
     def n_map(self, n, min1, max1, min2, max2):
         return ((n - min1) / (max1 - min1)) * (max2 - min2) + min2
 
     def place_smiling_orb(self):
-        for x in range(100):
-            Entity(model="models/smiling_orb", 
-                  texture="textures/smile",
-                    x = random.randint(1, self.terrain_width),
-                    z = random.randint(1, self.terrain_width),
-                    y = 10
+        for i in range(settings.STARS_AMOUNT):
+            xx = random.randint(1, self.terrain_width)
+            z = random.randint(1, self.terrain_width)
+            y = random.randint(0, 5)
+            r, g, b = [random.randint(0, 255) for _ in range(3)]
+            
+            e = Entity(
+                   parent = self.sky,
+                   model="models/mist_orb",
+                   color = color.rgb(r, g, b),
+                    x = xx,
+                    z = z,
+                    y = y,
+                    scale = 1 #random.randint(1, 10) / 100
                     )
+            self.stars.append(e)
+
+    def update_stars_position(self):
+        mod = 0.01
+        if self.sky.x >= 5: self.movement_direction = -1
+        if 0 < self.sky.x < 5: self.movement_direction = -1
+        
+        self.sky.x += (0.01 * self.movement_direction)
 
