@@ -24,9 +24,6 @@ scene.fog_color = color.rgb(R, G, B)
 window.fullscreen = True
 b = BuilderTool()
 level = Level(player)
-player.x = floor(TERRAIN_WIDTH/2)
-player.z = floor(TERRAIN_WIDTH/2)
-player.y = 100
 level.generate_chunk()
 
 def input(key):
@@ -46,5 +43,6 @@ def update():
     if time.time() - previous_time > 0.1:
         level.generate_subset()
 
+    level.update_rock()
 app.run()
 

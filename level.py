@@ -41,7 +41,7 @@ class Level:
         self.movement_direction = 1
         self.stars = []
 
-        self.place_smiling_orb()
+        self.falling_rock()
 
     def set_basic_terrain(self):
         for i in range(self.terrain_width ** 2):
@@ -74,12 +74,13 @@ class Level:
             z = self.subcubes[i].z = floor((i + self.subcube_index) % self.terrain_width)
             y = self.subcubes[i].y = floor((self.noise([x / self.freq, z / self.freq])) * self.amp)
             
+
             self.subcubes[i].parent = self.subsets[self.current_subset]
             self.subcubes[i].color = self.set_block_color(y)
             self.subcubes[i].visible = False
 
         self.subsets[self.current_subset].combine(auto_destroy=False)
-        #self.subsets[self.current_subset].texture = "textures/black_cube"
+        self.subsets[self.current_subset].texture = "textures/basic"
         #self.subsets[self.current_subset].shader = lit_with_shadows_shader
         self.subcube_index += self.sub_width
         self.current_subset += 1
@@ -94,7 +95,7 @@ class Level:
             
         if y > 2: r, g, b = dirt
         elif y >= 0: r, g, b = grass
-        elif y > -5: r, g, b = rock
+        elif y > -8: r, g, b = rock
         else: r, g, b = lava
 
         if (r, g, b) not in (cloud, rock):
@@ -110,30 +111,15 @@ class Level:
             self.player.disable()
             self.terrain.combine()
             self.terrain_finished = True
-            self.terrain.texture = "textures/black_cube"
-            self.sky.combine()
+            self.terrain.texture = "textures/basic"
+            self.player.x = floor(settings.TERRAIN_WIDTH/2)
+            self.player.z = floor(settings.TERRAIN_WIDTH/2)
+            self.player.y = 100
+            #self.sky.combine()
             self.player.enable()
     
     def n_map(self, n, min1, max1, min2, max2):
         return ((n - min1) / (max1 - min1)) * (max2 - min2) + min2
-
-    def place_smiling_orb(self):
-        for i in range(settings.STARS_AMOUNT):
-            xx = random.randint(1, self.terrain_width)
-            z = random.randint(1, self.terrain_width)
-            y = random.randint(0, 5)
-            r, g, b = [random.randint(0, 255) for _ in range(3)]
-            
-            e = Entity(
-                   parent = self.sky,
-                   model="models/mist_orb",
-                   color = color.rgb(r, g, b),
-                    x = xx,
-                    z = z,
-                    y = y,
-                    scale = 1 #random.randint(1, 10) / 100
-                    )
-            self.stars.append(e)
 
     def update_stars_position(self):
         mod = 0.01
@@ -141,4 +127,29 @@ class Level:
         if 0 < self.sky.x < 5: self.movement_direction = -1
         
         self.sky.x += (0.01 * self.movement_direction)
+
+    def falling_rock(self):
+       x = random.randint(1, self.terrain_width)
+       z = random.randint(1, self.terrain_width)
+       y = random.randint(20, 500)
+
+       for x in range(100):
+            e = Entity(
+                parent = self.sky,
+                model = "models/mist_orb",
+                collider = None,
+                scale = 0.1,
+                position = ()
+            )
+
+            self.stars.append(e)
+    def update_rock(self):
+        for entity in self.stars:
+            if entity.y == -self.amp:
+                entity.y = random.randint(50, 100)
+                entity.x = random.randint(0, self.terrain_width)
+                entity.z = random.randint(0, self.terrain_width)
+            else:
+                entity.y -= 0.5
+
 
