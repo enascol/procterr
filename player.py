@@ -2,10 +2,7 @@ from ursina import *
 from ursina.prefabs.first_person_controller import FirstPersonController
 
 from settings import TERRAIN_WIDTH
-<<<<<<< HEAD
-=======
 from follower import Pet
->>>>>>> be99711d67f0ed8897551e994f131bb42b32b94a
  
 class Player(FirstPersonController):
 

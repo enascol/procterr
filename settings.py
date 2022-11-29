@@ -1,20 +1,12 @@
 from numpy import floor
 
-<<<<<<< HEAD
-TERRAIN_WIDTH = 250
-mod = 30
-AMP = 7 + mod
-FREQUENCY = 12 + mod
-=======
 import random
-
 
 BLOCK_ALPHA = 255
 TERRAIN_WIDTH = 255
 MIDDLE_X = MIDDLE_Z = floor(TERRAIN_WIDTH/2)
 AMP = 30
 FREQUENCY = 45
->>>>>>> be99711d67f0ed8897551e994f131bb42b32b94a
 OCTAVE = 1
 SEED = random.randint(1, 50000)
 FOG_DENSITY = 0
@@ -34,8 +26,6 @@ FOG_COLOR = 255, 0, 0
 STARS_AMOUNT = 500
 
 AUDIO_PATH = r"D:\Python\procga\audio"
-<<<<<<< HEAD
-=======
 
 REGIONS_COLOR = {}
 
@@ -51,4 +41,3 @@ for x in range(4):
         "grass": [random.randint(FLOOR, CEIL) for x in range(3)] + [BLOCK_ALPHA],
         "dirt": [random.randint(FLOOR, CEIL) for x in range(3)] + [BLOCK_ALPHA],
         }
->>>>>>> be99711d67f0ed8897551e994f131bb42b32b94a
